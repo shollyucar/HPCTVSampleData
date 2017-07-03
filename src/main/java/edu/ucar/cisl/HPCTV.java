@@ -17,7 +17,7 @@ public class HPCTV {
     static String username = "username";
     static String password = "password";
 
-    static String FILEPATH = "/path/to/sample/data";
+    static String FILEPATH = "/path/to/file/output";
     static String PROJCODE = "Project Code";
     static String COREHOURS = "Core Hours";
     static String MACHINE = "Machine";
@@ -44,7 +44,7 @@ public class HPCTV {
         return machines;
     }
 
-    public static ArrayList<ArrayList<String>> getDataForDate(String machine, Integer resultCount) {
+    public static ArrayList<ArrayList<String>> getDataForDate(String machine, java.util.Date date, Integer resultCount) {
         ArrayList<ArrayList<String>> dataForMachine = new ArrayList<ArrayList<String>>();
         try {
             Class.forName("com.mysql.jdbc.Driver");
@@ -58,12 +58,7 @@ public class HPCTV {
                     "inner join project p on hcs.projcode = p.projcode\n" +
                     "inner join area_of_interest aoi on p.area_of_interest_id = aoi.area_of_interest_id\n" +
                     "where activity_date = ? AND machine = ? group by hcs.projcode order by core_hours_sum desc limit ?;");
-
-            java.util.Date date = new java.util.Date();
-            String target = "2017-06-18";
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
-            date = df.parse(target);
+//
 
             java.sql.Date d = new java.sql.Date(date.getTime());
             stmt.setDate(1, d);
@@ -121,12 +116,12 @@ public class HPCTV {
             java.util.Date enddate;
             startdate = df.parse(startdateString);
             enddate = df.parse(enddateString);
-            while (startdate.before(enddate)) {
+            while (! startdate.after(enddate)) {
                 java.sql.Date sqlDate = new java.sql.Date(startdate.getTime());
                 System.out.println(startdate.toString());
                 ArrayList<String> machines = getMachinesForDate(sqlDate);
                 for (String m : machines) {
-                    ArrayList<ArrayList<String>> dataForMachine = getDataForDate(m, resultCount);
+                    ArrayList<ArrayList<String>> dataForMachine = getDataForDate(m, startdate, resultCount);
                     writeCSVFile(dataForMachine, startdate, m);
                 }
                 Calendar c = Calendar.getInstance();
